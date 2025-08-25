@@ -76,3 +76,45 @@ export const verifyUser = async (
   }
 };
 
+export const loginUser = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      throw new ValidationError("Email & password are required");
+    }
+
+    const user = await prisma.users.findUnique({ where: { email } });
+
+    if (!user) throw new AuthError("user doesn't exits");
+
+    const isMatch = await bcrypt.compare(password, user.password!);
+    if (!isMatch) throw new AuthError("Invalid credentials");
+
+    const accessToken = jwt.sign(
+      { id: user.id, role: "user" },
+      process.env.ACCESS_TOKEN_SECRET as string,
+      { expiresIn: "15m" }
+    );
+
+    const refreshToken = jwt.sign(
+      { id: user.id, role: "user" },
+      process.env.REFRESH_TOKEN_SECRET as string,
+      { expiresIn: "7d" }
+    );
+
+    setCookie(res, "refresh_token", refreshToken);
+    setCookie(res, "access_token", accessToken);
+
+    return res.status(200).json({
+      message: "Login successfull",
+      user: { id: user.id, email: user.email, name: user.name },
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
