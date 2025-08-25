@@ -6,6 +6,7 @@ import bcrypt from "bcryptjs";
 
 import {
   checkOptRestrictions,
+  handleForgotPassword,
   sendOtp,
   trackOtpRequests,
   validateRegistrationData,
@@ -117,4 +118,12 @@ export const loginUser = async (
   } catch (error) {
     return next(error);
   }
+};
+
+export const userForgotPassword = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  await handleForgotPassword(req, res, next, "user");
 };
