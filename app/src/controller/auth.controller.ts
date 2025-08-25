@@ -10,6 +10,7 @@ import {
   sendOtp,
   trackOtpRequests,
   validateRegistrationData,
+  verifyForgotPasswordOtp,
   verifyOtp,
 } from "@/utils/auth.helper";
 import jwt from "jsonwebtoken";
@@ -126,6 +127,14 @@ export const userForgotPassword = async (
   next: NextFunction
 ) => {
   await handleForgotPassword(req, res, next, "user");
+};
+
+export const verifyUserForgotPassword = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  await verifyForgotPasswordOtp(req, res, next);
 };
 
 export const resetUserPassword = async (
