@@ -69,7 +69,7 @@ const HeaderBottom = () => {
 
         <div className="flex items-center">
           {navItems.map((nav, i) => (
-            <Link href={nav.href} className="px-5 font-medium text-lg">
+            <Link key={i} href={nav.href} className="px-5 font-medium text-lg">
               {nav.title}
             </Link>
           ))}
