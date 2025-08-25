@@ -127,3 +127,43 @@ export const userForgotPassword = async (
 ) => {
   await handleForgotPassword(req, res, next, "user");
 };
+
+export const resetUserPassword = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { email, newPassword } = req.body;
+
+    if (!email || !newPassword) {
+      throw new ValidationError("Email and new password are required!");
+    }
+
+    const user = await prisma.users.findUnique({ where: { email } });
+
+    if (!user) throw new ValidationError("User not found!");
+
+    const isSamePassword = await bcrypt.compare(newPassword, user.password!);
+
+    if (isSamePassword)
+      throw new ValidationError(
+        "New password cannot be the same as the old password"
+      );
+
+    // ** hash the new password
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await prisma.users.update({
+      where: { email },
+      data: { password: hashedPassword },
+    });
+
+    return res.status(200).json({
+      message: "Password reset successfully!",
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
