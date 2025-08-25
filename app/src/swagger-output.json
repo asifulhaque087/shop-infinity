@@ -6,10 +6,12 @@
     "version": "1.0.0"
   },
   "host": "localhost:6001",
-  "basePath": "/",
-  "schemes": ["http"],
+  "basePath": "/api",
+  "schemes": [
+    "http"
+  ],
   "paths": {
-    "/api/user-registration": {
+    "/user-registration": {
       "post": {
         "description": "",
         "parameters": [
@@ -20,18 +22,85 @@
               "type": "object",
               "properties": {
                 "name": {
-                  "example": "Asiful"
+                  "example": "any"
                 },
                 "email": {
-                  "example": "asifulhaque087@gmail.com"
-                },
-                "password": {
-                  "example": "12345678"
+                  "example": "any"
                 }
               }
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/verify-user": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "email": {
+                  "example": "any"
+                },
+                "otp": {
+                  "example": "any"
+                },
+                "password": {
+                  "example": "any"
+                },
+                "name": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        }
+      }
+    },
+    "/login-user": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "email": {
+                  "example": "any"
+                },
+                "password": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "description": "",
         "responses": {
           "200": {
             "description": "OK"
