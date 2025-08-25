@@ -37,7 +37,7 @@ export class ValidationError extends AppError {
 
 export class AuthError extends AppError {
   constructor(message = "unautorizes") {
-    super(message, 4001);
+    super(message, 401);
   }
 }
 
