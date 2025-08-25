@@ -30,7 +30,7 @@ app.get("/docs-json", (req, res) => {
 });
 
 // router
-app.get("/api", router);
+app.use("/api", router);
 
 app.use(errorMiddleware);
 
