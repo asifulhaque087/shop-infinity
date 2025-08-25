@@ -1,12 +1,19 @@
 import express, { Router } from "express";
-import { userRegistration } from "../controller/auth.controller";
+import {
+  loginUser,
+  userRegistration,
+  verifyUser,
+} from "../controller/auth.controller";
 
 const router: Router = express.Router();
 
 router.post("/user-registration", userRegistration);
+router.post("/verify-user", verifyUser);
+router.post("/login-user", loginUser);
+
+// ** --- health route ---
+
 router.get("/health", (req, res) => {
-  //   console.log(process.cwd());
-  //   return res.json(process.cwd())
   return res.json({ message: "App is running" });
 });
 
