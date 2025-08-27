@@ -172,9 +172,9 @@ const page = () => {
                 })}
               />
 
-              {errors.email && (
+              {errors.name && (
                 <p className="text-red-500 text-sm">
-                  {String(errors.email.message)}
+                  {String(errors.name.message)}
                 </p>
               )}
 
