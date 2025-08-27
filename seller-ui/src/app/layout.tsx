@@ -1,17 +1,20 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Poppins, Roboto } from "next/font/google";
 import "./globals.css";
+// import Header from "@/shared/widgets";
+import Providers from "@/app/providers";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+export const roboto = Roboto({
   subsets: ["latin"],
+  weight: ["100", "300", "400", "500", "700", "900"],
+  variable: "--font-roboto",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+export const poppins = Poppins({
   subsets: ["latin"],
+  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+  variable: "--font-poppins",
 });
-
 export const metadata: Metadata = {
   title: "Shop Infinity Seller",
   description: "Shop Infinity Seller",
@@ -24,10 +27,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
+      <body className={`${roboto.variable} ${poppins.variable}`}>
+        <Providers>
+          {/* <Header /> */}
+          {children}
+        </Providers>
       </body>
     </html>
   );
