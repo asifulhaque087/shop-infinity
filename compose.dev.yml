@@ -1,0 +1,95 @@
+name: shop-infinity-dev
+
+services:
+  redis:
+    container_name: redis_container
+    image: redis:alpine
+    restart: always
+    ports:
+      - "6379:6379"
+    command: redis-server --loglevel warning
+
+  mongodb:
+    container_name: mongodb_container
+    image: mongo:latest
+    restart: always
+    ports:
+      - 27017:27017
+
+  # ==================================== Application==============================
+
+  ui:
+    container_name: ui_container
+    build:
+      context: ui
+      dockerfile: Dockerfile.dev
+    restart: always
+    ports:
+      - 3000:3000
+    environment:
+      - NEXT_PUBLIC_SERVER_URI=${GATEWAY_PUBLIC_URL}
+    volumes:
+      - ./ui:/home/app
+      - /home/app/node_modules
+    depends_on:
+      - gateway
+
+  seller-ui:
+    container_name: seller_ui_container
+    build:
+      context: seller-ui
+      dockerfile: Dockerfile.dev
+    restart: always
+    ports:
+      - 3001:3001
+    environment:
+      - NEXT_PUBLIC_SERVER_URI=${GATEWAY_PUBLIC_URL}
+    volumes:
+      - ./seller-ui:/home/app
+      - /home/app/node_modules
+    depends_on:
+      - gateway
+
+  gateway:
+    container_name: gateway_container
+    build:
+      context: gateway
+      dockerfile: Dockerfile.dev
+    restart: always
+    ports:
+      - 8080:8080
+    environment:
+      - APP_URL=${APP_URL}
+    volumes:
+      - ./gateway:/home/app
+      - /home/app/node_modules
+    depends_on:
+      - redis
+      - app
+
+  app:
+    container_name: app_container
+    build:
+      context: app
+      dockerfile: Dockerfile.dev
+    restart: always
+    ports:
+      - 6001:6001
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_DATABASE_URI=${REDIS_HOST}
+      - ACCESS_TOKEN_SECRET=${ACCESS_TOKEN_SECRET}
+      - REFRESH_TOKEN_SECRET=${REFRESH_TOKEN_SECRET}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_SERVICE=${SMTP_SERVICE}
+      - SMTP_HOST=${SMTP_HOST}
+    volumes:
+      - ./app:/home/app
+      - /home/app/node_modules
+    depends_on:
+      redis:
+        condition: service_started
+      mongodb:
+        condition: service_started
