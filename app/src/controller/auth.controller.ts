@@ -102,6 +102,9 @@ export const loginUser = async (
     const isMatch = await bcrypt.compare(password, user.password!);
     if (!isMatch) throw new AuthError("Invalid credentials");
 
+    res.clearCookie("seller-access-token");
+    res.clearCookie("seller-refresh-token");
+
     const accessToken = jwt.sign(
       { id: user.id, role: "user" },
       process.env.ACCESS_TOKEN_SECRET as string,
@@ -126,13 +129,21 @@ export const loginUser = async (
   }
 };
 
+// refresh token
 export const refreshToken = async (
-  req: Request,
+  // req: Request,
+  req: any,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const refreshToken = req.cookies.refresh_token;
+    // const refreshToken = req.cookies.refresh_token;
+
+    const refreshToken =
+      req.cookies["refresh_token"] ||
+      req.cookies["seller-refresh-token"] ||
+      req.headers.authorization?.split(" ")[1];
+
     if (!refreshToken)
       return new ValidationError("Unauthorized! No refresh token.");
 
@@ -145,10 +156,29 @@ export const refreshToken = async (
       return new JsonWebTokenError("Forbidden! Invalid refresh token");
     }
 
-    const user = await prisma.users.findUnique({ where: { id: decoded.id } });
+    // const user = await prisma.users.findUnique({ where: { id: decoded.id } });
 
-    if (!user) {
-      return new AuthError("Forbidden! User/Seller not found");
+    // if (!user) {
+    //   return new AuthError("Forbidden! User/Seller not found");
+    // }
+
+    let account;
+
+    if (decoded.role === "user") {
+      account = await prisma.users.findUnique({
+        where: { id: decoded.id },
+      });
+    } else if (decoded.role === "seller") {
+      account = await prisma.sellers.findUnique({
+        where: { id: decoded.id },
+        include: { shop: true },
+      });
+    }
+
+    if (!account) {
+      return res
+        .status(401)
+        .json({ message: "Forbidden! User/Seller not found" });
     }
 
     const newAccessToken = jwt.sign(
@@ -156,8 +186,14 @@ export const refreshToken = async (
       process.env.ACCESS_TOKEN_SECRET as string,
       { expiresIn: "15m" }
     );
+    if (decoded.role === "user") {
+      setCookie(res, "access_token", newAccessToken);
+    } else if (decoded.role === "seller") {
+      setCookie(res, "seller-access-token", newAccessToken);
+    }
+    req.role = decoded.role;
 
-    setCookie(res, "access_token", newAccessToken);
+    // setCookie(res, "access_token", newAccessToken);
 
     return res.status(201).json({ success: true });
   } catch (error) {
@@ -342,7 +378,6 @@ export const createShop = async (
 
 // create stripe connect link
 
-
 // 7h30m - 8h
 export const createStripeConnectLink = async (
   req: Request,
@@ -408,6 +443,9 @@ export const loginSeller = async (
 
     const isMatch = await bcrypt.compare(password, seller.password!);
     if (!isMatch) throw new ValidationError("Invalid email or password");
+
+    res.clearCookie("access_token");
+    res.clearCookie("refresh_token");
 
     const accessToken = jwt.sign(
       { id: seller.id, role: "user" },
