@@ -42,6 +42,16 @@ const page = () => {
     retry: 2,
   });
 
+  // 11h33m
+
+  const { data: discountCodes = [], isLoading: discountLoading } = useQuery({
+    queryKey: ["shop-discounts"],
+    queryFn: async () => {
+      const res = await axiosInstance.get("/product/api/get-discount-codes");
+      return res?.data?.discount_codes || [];
+    },
+  });
+
   const categories = data?.categories || [];
   const subCategoriesData = data?.subCategories || {};
 
@@ -58,32 +68,85 @@ const page = () => {
   const onSubmit = (data: FormData) => {
     console.log("data is ", data);
   };
-  const handleImageChange = (file: File | null, index: number) => {
-    const updatedImages = [...images];
 
-    updatedImages[index] = file;
-
-    if (index === images.length - 1 && images.length < 8) {
-      updatedImages.push(null);
-    }
-
-    setImages(updatedImages);
-    setValue("images", updatedImages);
+  const convertFileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    });
   };
+  const handleImageChange = async (file: File | null, index: number) => {
+    if (!file) return;
 
-  const handleRemoveImage = (index: number) => {
-    setImages((prevImages) => {
-      const updatedImages = [...prevImages];
-      updatedImages.splice(index, 1);
+    try {
+      const fileName = await convertFileToBase64(file);
 
-      if (!updatedImages.includes(null) && updatedImages.length < 8) {
+      const response = await axiosInstance.post(
+        "/product/api/upload-product-image",
+        fileName
+      );
+
+      const updatedImages = [...images];
+      updatedImages[index] = response.data.file_url;
+
+      if (index === images.length - 1 && updatedImages.length < 8) {
         updatedImages.push(null);
       }
 
-      return updatedImages;
-    });
+      setImages(updatedImages);
+      setValue("images", updatedImages);
+    } catch (error) {
+      console.log(error);
+    }
 
-    setValue("images", images);
+    // const updatedImages = [...images];
+
+    // updatedImages[index] = file;
+
+    // if (index === images.length - 1 && images.length < 8) {
+    //   updatedImages.push(null);
+    // }
+
+    // setImages(updatedImages);
+    // setValue("images", updatedImages);
+  };
+
+  const handleRemoveImage = (index: number) => {
+    try {
+      const updatedImages = [...images];
+
+      const imageToDelete = updatedImages[index];
+      if (imageToDelete && typeof imageToDelete === "string") {
+        // delete our picture
+      }
+
+      updatedImages.splice(index, 1);
+
+      // Add null placeholder
+      if (!updatedImages.includes(null) && updatedImages.length < 8) {
+        updatedImages.push(null);
+
+        setImages(updatedImages);
+        setValue("images", updatedImages);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+
+    // setImages((prevImages) => {
+    //   const updatedImages = [...prevImages];
+    //   updatedImages.splice(index, 1);
+
+    //   if (!updatedImages.includes(null) && updatedImages.length < 8) {
+    //     updatedImages.push(null);
+    //   }
+
+    //   return updatedImages;
+    // });
+
+    // setValue("images", images);
   };
 
   const handleSaveDraft = () => {};
@@ -517,6 +580,36 @@ const page = () => {
                 <label className="block font-semibold text-gray-300 mb-1">
                   Select Discount Codes (optional)
                 </label>
+
+                {discountLoading ? (
+                  <p className="text-gray-400">Loading discount codes ...</p>
+                ) : (
+                  <div className="flex flex-wrap gap-2 ">
+                    {discountCodes.map((code: any) => (
+                      <button
+                        type="button"
+                        className={`px-3 py-1 rounded-md text-sm font-semibold border ${
+                          watch("discountCodes")?.includes(code.id)
+                            ? "bg-blue-600 text-white border-blue-600"
+                            : "bg-gray-800 border-gray-600 hover:border-gray-700"
+                        }`}
+                        onClick={() => {
+                          const currentSelection = watch("discountCodes") || [];
+                          const updatedSelection = currentSelection?.includes(
+                            code.id
+                          )
+                            ? currentSelection.filter((id) => id !== code.id)
+                            : [...currentSelection, code.id];
+                          setValue("discountCodes", updatedSelection);
+                        }}
+                      >
+                        {/* 11h37m */}
+                        {code?.public_name} ({code.discountValue}
+                        {code.discountType === "percentage" ? "%" : "$"})
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
